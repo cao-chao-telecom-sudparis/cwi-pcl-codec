@@ -35,13 +35,13 @@
  * $Id$
  *
  */
-//
-//  evaluate_compression.h
-//  evaluate_compression
-//
-//  Created by Kees Blom on 01/06/16.
-//
-//
+ //
+ //  evaluate_compression.h
+ //  evaluate_compression
+ //
+ //  Created by Kees Blom on 01/06/16.
+ //
+ //
 
 #ifndef evaluate_compression_h
 #define evaluate_compression_h
@@ -50,8 +50,8 @@
 
 class evaluate_compression {
 protected:
-  evaluate_compression (int argc, char** argv) : argc_(argc), argv_(argv), output_index_(-1) {}
-  private:
+    evaluate_compression(int argc, char** argv) : argc_(argc), argv_(argv), output_index_(-1) {}
+private:
     // get_options_from_file
     // get_options_from_commandline
     // load_pcl_file
@@ -68,30 +68,30 @@ protected:
     //
     // int evaluate(const int argc, const char* argv[]);
     //
-  protected: // variables
+protected: // variables
 // input settings
     int argc_;
     char** argv_;
     std::vector<std::string> input_directories_;
-// output settings
+    // output settings
     int write_out_ply_;
     bool show_statistics_ = false;
     bool visualization_ = false;
     std::string output_directory_;
     std::string intra_frame_quality_csv_;
     std::string predictive_quality_csv_;
-// program control settings
+    // program control settings
     int group_size_;
     std::string algorithm_; // select compression algorithm
     int testbbalign_;  // testing the bounding box alignment algorithm ?TBD want to keep this ?
     int debug_level_;
     int num_threads_;
-// outlier removal
+    // outlier removal
     int K_outlier_filter_;
     double radius_;
-// boundingbox expansion and normalisation
+    // boundingbox expansion and normalisation
     double bb_expand_factor_;
-// compression codec settings
+    // compression codec settings
     double point_resolution_;
     double octree_resolution_;
     int enh_bits_;          // enhancement resolution YBD
@@ -108,5 +108,5 @@ protected:
     bool create_scalable_;
     int jpeg_quality_;
     int output_index_;
-  };
+};
 #endif /* evaluate_compression_h */
