@@ -1868,11 +1868,11 @@ namespace pcl{
       *  \param point_clouds: a vector of pointers to point_clouds to be inspected and modified
       * to normalize their bouding boxes s.t. they effectivly can be used for interframe coding.
       */
-    template<typename PointT, typename LeafT, typename BranchT, typename OctreeT> BoundingBox OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::normalize_pointclouds(vector<PointCloudPtr> &point_clouds, vector<BoundingBox, Eigen::aligned_allocator<BoundingBox> > &bounding_boxes, double bb_expand_factor, vector<float> dynamic_range, vector<float> offset, unsigned int debug_level)
+    template<typename PointT, typename LeafT, typename BranchT, typename OctreeT> vector<BoundingBox> OctreePointCloudCodecV2<PointT, LeafT, BranchT, OctreeT>::normalize_pointclouds(vector<PointCloudPtr> &point_clouds, vector<BoundingBox, Eigen::aligned_allocator<BoundingBox> > &bounding_boxes, double bb_expand_factor, vector<float> dynamic_range, vector<float> offset, unsigned int debug_level)
     {
       Eigen::Vector4f min_pt_bb(0,0,0,0);
       Eigen::Vector4f max_pt_bb;
-      pcl::io::BoundingBox bb;
+      vector<pcl::io::BoundingBox> bb;
         
       bool is_bb_init = false;
       int bb_align_count=0;
@@ -1890,7 +1890,8 @@ namespace pcl{
       for(int k=0;k<point_clouds.size();k++){
 	    Eigen::Vector4f min_pt;
         Eigen::Vector4f max_pt;
-        
+        pcl::io::BoundingBox bb_pt;
+
         pcl::getMinMax3D<pcl::PointXYZRGB>(*point_clouds[k],min_pt,max_pt);
           
         if (debug_level > 3) cerr << "[ " << min_pt.x() << "," << min_pt.y() << "," << min_pt.z() << "]    [" << max_pt.x() << "," << max_pt.y() << "," << max_pt.z() <<"]" << endl;
@@ -1931,7 +1932,9 @@ namespace pcl{
         
         bounding_boxes[k].max_xyz = max_pt_bb;
         bounding_boxes[k].min_xyz = min_pt_bb;
-        
+        bb_pt.min_xyz = min_pt_bb;
+        bb_pt.max_xyz = max_pt_bb;
+
         for(int j=0; j < point_clouds[k]->size();j++)
         {
           // offset the minimum value
@@ -1959,9 +1962,9 @@ namespace pcl{
         assert(max_pt_res[0] <= 1);
         assert(max_pt_res[1] <= 1);
         assert(max_pt_res[2] <= 1);
+        bb.push_back(bb_pt);
+
       }
-      bb.min_xyz = min_pt_bb;
-      bb.max_xyz = max_pt_bb;
         
       return bb;
     }

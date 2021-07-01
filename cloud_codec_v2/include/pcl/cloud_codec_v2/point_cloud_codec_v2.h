@@ -220,7 +220,7 @@ namespace pcl{
        * to normalize their bouding boxes s.t. they effectivly can be used for interframe coding.
        * \\returns the common bounding box for \\ref point clouds
        */
-      static BoundingBox
+      static vector<BoundingBox>
       normalize_pointclouds (vector<PointCloudPtr> &point_clouds, vector<BoundingBox, Eigen::aligned_allocator<BoundingBox> > &bouding_boxes, double bb_expand_factor, vector<float> dyn_range, vector<float> offset, unsigned int debug_level=0);
         
       static void

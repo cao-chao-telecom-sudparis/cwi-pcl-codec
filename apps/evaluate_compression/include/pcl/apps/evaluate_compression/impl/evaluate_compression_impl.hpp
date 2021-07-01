@@ -110,7 +110,7 @@ class evaluate_compression_impl : evaluate_compression {
 #endif//WITH_VTK
   
     void do_outlier_removal (std::vector<boost::shared_ptr<pcl::PointCloud<PointT> > >& pointcloud);
-    pcl::io::BoundingBox do_bounding_box_normalization (std::vector<boost::shared_ptr<pcl::PointCloud<PointT> > >& pointcloud);
+    vector<pcl::io::BoundingBox> do_bounding_box_normalization (std::vector<boost::shared_ptr<pcl::PointCloud<PointT> > >& pointcloud);
     void do_encoding (boost::shared_ptr<pcl::PointCloud<PointT> > point_cloud, stringstream* coded_stream, QualityMetric & achieved_quality);
     void do_decoding (stringstream* coded_stream, boost::shared_ptr<pcl::PointCloud<PointT> > pointcloud, QualityMetric & achieved_quality);
     void do_delta_encoding (boost::shared_ptr<pcl::PointCloud<PointT> > i_cloud, boost::shared_ptr<pcl::PointCloud<PointT> > p_cloud, boost::shared_ptr<pcl::PointCloud<PointT> > out_cloud, stringstream* i_stream, stringstream* p__stream, QualityMetric & quality_metric);
@@ -435,7 +435,7 @@ evaluate_compression_impl<PointT>::do_outlier_removal (std::vector<boost::shared
 }
       
 template<typename PointT>
-pcl::io::BoundingBox
+vector<pcl::io::BoundingBox>
 evaluate_compression_impl<PointT>::do_bounding_box_normalization (std::vector<boost::shared_ptr<pcl::PointCloud<PointT> > >& group)
 {
   vector<float> dyn_range, offset;
@@ -734,6 +734,7 @@ evaluate_compression_impl<PointT>::evaluate ()
     }
     std::vector<boost::shared_ptr<pcl::PointCloud<PointT> > >  group, encoder_output_clouds;
     int count = 0;
+    int count_coded = 0;
     std::ofstream intra_frame_quality_csv;
     stringstream compression_settings;
     compression_settings << "octree_bits=" << octree_bits_ << " color_bits=" <<  color_bits_ << " enh._bits=" << enh_bits_ << "_colortype=" << color_coding_type_ << " centroid=" << keep_centroid_;
@@ -768,17 +769,22 @@ evaluate_compression_impl<PointT>::evaluate ()
       }
       group.push_back(pc->makeShared());
       count++;
-      if (group_size_ == 0 && count < filenames.size ())
+      if (group_size_ == 0 && count < filenames.size())
       {
-        continue;
+          continue;
+      }
+      if (((count_coded + group_size_) > filenames.size()) && (count_coded + count) != filenames.size()) {
+          continue;
       }
       // encode the group for each set of 'group_size' filenames, and the final set
-      if (group_size_ == 0 || count == filenames.size () || count % group_size_ == 0)
+      if (group_size_ == 0 || count == filenames.size() || count % group_size_ == 0 || ((count_coded + group_size_) > filenames.size()))
+
       {
         evaluate_group (group, compression_settings, intra_frame_quality_csv, predictive_quality_csv);
         complete_initialization();
         // start new group
         group.clear ();
+        count_coded += count;
         count = 0;
       }
     }
@@ -809,7 +815,7 @@ evaluate_compression_impl<PointT>::evaluate_group(std::vector<boost::shared_ptr<
     working_group.push_back (point_cloud->makeShared ());
   }
   if (K_outlier_filter_ > 0) do_outlier_removal (working_group);
-  pcl::io::BoundingBox bb; // bounding box of this working_group
+  vector<pcl::io::BoundingBox> bb; // bounding box of this working_group
   if (bb_expand_factor_ > 0.0) bb = do_bounding_box_normalization (working_group);
   int working_group_size = working_group.size();
   vector<float> icp_convergence_percentage (working_group_size);
@@ -843,7 +849,7 @@ evaluate_compression_impl<PointT>::evaluate_group(std::vector<boost::shared_ptr<
     }
     // Note that the quality of the en/decompression was computed on the transformed (bb aligned) pointclouds
     boost::shared_ptr<pcl::PointCloud<PointT> > rescaled_pc = output_pointcloud->makeShared ();
-    if (bb_expand_factor_ > 0.0) pcl::io::OctreePointCloudCodecV2 <PointT>::restore_scaling (rescaled_pc, bb);
+    if (bb_expand_factor_ > 0.0) pcl::io::OctreePointCloudCodecV2 <PointT>::restore_scaling (rescaled_pc, bb[i]);
     if (output_directory_ != "")
     {
       do_output ( "pointcloud_" + boost::lexical_cast<string> (output_index_++) + ".ply", rescaled_pc, achieved_quality);
@@ -880,7 +886,7 @@ evaluate_compression_impl<PointT>::evaluate_group(std::vector<boost::shared_ptr<
           predictive_quality.print_csv_line(compression_settings.str(), predictive_quality_csv);
         }
       }
-      pcl::io::OctreePointCloudCodecV2 <PointT>::restore_scaling (predicted_pc, bb);
+      pcl::io::OctreePointCloudCodecV2 <PointT>::restore_scaling (predicted_pc, bb[i+1]);
       if (output_directory_ != "")
       {
         do_output ("delta_decoded_pc_" + boost::lexical_cast<string> (output_index_) + ".ply", predicted_pc, predictive_quality);
